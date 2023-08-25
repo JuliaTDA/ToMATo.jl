@@ -1,13 +1,10 @@
 using Distances
 using NearestNeighbors
-using NetworkLayout
 using Base.Threads
 import GeometricDatasets as gd
 using AlgebraOfGraphics
 using DataFrames
 using Graphs
-using Makie
-using GLMakie
 
 X = hcat(randn(2, 800), randn(2, 800) .+ 4)
 k = x -> exp(-(x / 2)^2)
@@ -17,16 +14,14 @@ fig, ax, pt = scatter(X[1, :], X[2, :], color = ds);
 Colorbar(fig[1, 2], colorrange = extrema(ds))
 fig
 
-ids = sortperm(ds, rev = true)
-
-g = Graph(Int64)
+global g = Graph(Int64)
 add_vertices!(g, size(X)[2])
 
-max_k_ball = 50
+max_k_ball = 6
 min_k_ball = 3
 k_nn = 2
 
-ϵ = 0.7
+ϵ = 0.4
 bt = BallTree(X)
 
 for v1 ∈ 1:size(X)[2]
@@ -65,46 +60,57 @@ end;
 
 fig
 
-clusters = zeros(Int64, size(X)[2])
+update_cluster!(cluster, from, to) = replace!(x -> x == from ? to : x, cluster)
 
-i = ids[1]
-ds[i]
-ds |> maximum
+ids = sortperm(ds, rev = true)
+global clusters = zeros(Int64, size(X)[2])
+τ = 0.1
 
-for i ∈ ids   
-    nbs = neighbors(g, i)
-    pushfirst!(nbs, i)
+i = ids[2]
+for i ∈ ids#[1:2]
+    N = neighbors(g, i)
+    filter!(x -> ds[x] > ds[i], N)
 
-    id_max = nbs[findmax(ds[nbs])[2]]
-
-    if i == id_max
+    if length(N) == 0
         clusters[i] = i
-    else
-        clusters[i] = clusters[id_max]
+        continue
     end
+
+    # |N| > 0
+    c_max = clusters[argmax(x -> ds[x], N)]
+    clusters[i] = c_max
+
+    j = N[1]
+    for j ∈ N
+        c_j = clusters[j]
+
+        # if the clusters are equal, skip
+        c_max == c_j && continue
+
+        # if c_j has no cluster, put j on c_max
+        if c_j == 0
+            update_cluster!(clusters, j, c_max)
+            continue
+        end
+
+        # If the lowest of them is just a bit below the current height ds[i],        
+        # we then fuse the clusters        
+        if min(ds[c_max], ds[c_j]) < ds[i] + τ
+            from, to = sort([c_max, c_j], by = x -> ds[x])
+            update_cluster!(clusters, from, to)
+        end
+    end    
 end
+
 clusters
+
 clusters |> unique
 
-dados = DataFrame(X', :auto)
-dados.cor = clusters .|> string
+using AlgebraOfGraphics
 
-axis = (width = 600, height = 600)
-pt = data(dados) * mapping(:x1, :x2, color = :cor)
-draw(pt, axis = axis)
+df = DataFrame(X', :auto)
+df.cluster = clusters .|> string
 
-
-# https://juliacollections.github.io/DataStructures.jl/stable/disjoint_sets/
-using DataStructures
-U = IntDisjointSets(0)
-U
-n = push!(U)
-n
-push!(U, 1)
-U
-union!(U, 3, 5)
-U
-root_union!(U, 1, 2)
-U
-find_root(U, 3)
-in_same_set(U, 1, 3)
+using GLMakie
+plt = data(df) * mapping(:x1, :x2, color = :cluster)
+draw(plt)
