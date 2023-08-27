@@ -1,0 +1,18 @@
+# git push origin :gh-pages && git subtree push --prefix docs origin gh-pages
+project:
+  type: website
+  output-dir: ../docs
+
+jupyter: julia-1.9
+
+website:
+  title: "ToMATo"  
+  sidebar:
+    contents:
+      - index.qmd
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true

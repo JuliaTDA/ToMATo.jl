@@ -8,6 +8,8 @@ using GLMakie
 using DataFrames
 using Graphs
 using ProgressMeter
+using Quartomenter;
+export @qdoc;
 
 include("graph.jl");
 export proximity_graph, graph_plot;

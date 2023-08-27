@@ -2,7 +2,7 @@
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "2acf54debd652dc54207529803697879a82fb439"
+project_hash = "bbb641471b0b0e722e34153f5e5bbb18b48cd53e"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1209,6 +1209,14 @@ deps = ["DataStructures", "LinearAlgebra"]
 git-tree-sha1 = "6ec7ac8412e83d57e313393220879ede1740f9ee"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 version = "2.8.2"
+
+[[deps.Quartomenter]]
+deps = ["Markdown"]
+git-tree-sha1 = "7a4d7b949c791270e1fb98aba9e1ec1c1ffb0896"
+repo-rev = "main"
+repo-url = "https://github.com/vituri/Quartomenter.jl"
+uuid = "1c8adf78-70e3-458e-9438-d9689fce1a5f"
+version = "1.0.0-DEV"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]

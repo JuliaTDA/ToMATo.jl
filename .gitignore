@@ -2,3 +2,4 @@
 *.pdf
 *.json
 .vscode/settings.json
+docs/
