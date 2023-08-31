@@ -1,3 +1,18 @@
+"""
+    proximity_graph(X, ϵ; max_k_ball = 5, min_k_ball = 1, k_nn = 3)
+
+Calculate the proximity graph of a point cloud `X` and return
+a graph. The construction is as follows:
+
+- For each point x in X, we create an ϵ-ball around X and 
+store all the ids of these points inside the ball. If the amount
+of ids is less than min_k_ball, we then search the nearest neighbors
+k_nn neighbors of x, and store these ids. 
+
+- In any of the cases above, we select only a max of max_k_ball points, 
+so the graph does not became too big.
+
+"""
 function proximity_graph(X, ϵ; max_k_ball = 5, min_k_ball = 1, k_nn = 3)
 
     global g = Graph(Int64)
@@ -25,20 +40,4 @@ function proximity_graph(X, ϵ; max_k_ball = 5, min_k_ball = 1, k_nn = 3)
     
     return g
     
-end
-
-function graph_plot(X, g, ds)
-    node_positions = [Point2(X[:, i]) for i ∈ 1:size(X)[2]]
-
-    fig, ax, plt = scatter(node_positions, color = ds);
-    
-    for e ∈ edges(g)
-        e.src == e.dst && continue
-        linesegments!(
-            ax, [node_positions[e.src], node_positions[e.dst]], color = :black
-            ,linewidth = 0.5, alpha = 0.5
-            )
-    end;
-    
-    fig, ax, plt
 end
