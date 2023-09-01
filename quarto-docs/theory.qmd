@@ -1,0 +1,5 @@
+# Theory
+
+[work in progress. see the original papers for now]
+
+https://geometrica.saclay.inria.fr/data/Steve.Oudot/clustering/

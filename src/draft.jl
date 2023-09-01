@@ -11,7 +11,7 @@ df = (x1 = X[1, :], x2 = X[2, :], ds = ds)
 plt = data(df) * mapping(:x1, :x2, color = :ds)
 draw(plt)
 
-g = proximity_graph(X, 0.2, max_k_ball = 10, k_nn = 4, min_k_ball = 4)
+g = proximity_graph(X, 0.2, max_k_ball = 6, k_nn = 4, min_k_ball = 2)
 
 fig, ax, plt = graph_plot(X, g, ds)
 fig
@@ -25,9 +25,6 @@ clusters, births_and_deaths = tomato(X, g, ds, τ, max_cluster_height = τ)
 
 fig, ax, plt = graph_plot(X, g, clusters .|> string)
 fig
-
-
-
 
 
 
@@ -52,8 +49,8 @@ fig
 clusters, births_and_deaths = tomato(X, g, ds, Inf)
 plot_births_and_deaths(births_and_deaths)
 
-τ = 0.08
-clusters, births_and_deaths = tomato(X, g, ds, τ, max_cluster_height = τ*1.5)
+τ = 0.2
+clusters, births_and_deaths = tomato(X, g, ds, τ, max_cluster_height = τ)
 clusters |> unique
 
 fig, ax, plt = graph_plot(X, g, clusters .|> string)

@@ -22,7 +22,7 @@ Given a metric space X on 2 dimensions, a graph g obtained with
 plot the proximity graph with nodes colored by `values`.
 """
 function graph_plot(X::PointCloud, g::Graph, values)
-    n = size(X)[2]
+    n = size(X)[1]
     n = clamp(n, 2, 3)
     node_positions = [Point{n}(X[:, i]) for i ∈ 1:size(X)[2]]
 

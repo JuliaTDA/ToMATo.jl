@@ -6,10 +6,12 @@ project:
 jupyter: julia-1.9
 
 website:
-  title: "ToMATo"  
+  title: "ToMATo.jl"  
   sidebar:
     contents:
       - index.qmd
+      # - algorithm.qmd
+      - examples.qmd
 
 format:
   html:

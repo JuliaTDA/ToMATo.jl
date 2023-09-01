@@ -6,7 +6,6 @@ using NearestNeighbors
 using Base.Threads
 using AlgebraOfGraphics
 using GLMakie
-using DataFrames
 using Graphs
 using ProgressMeter
 using Quartomenter;
