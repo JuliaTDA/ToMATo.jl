@@ -4,20 +4,62 @@
     "href": "index.html",
     "title": "Getting started",
     "section": "",
-    "text": "In Julia, type\n\n] add https://github.com/JuliaTDA/ToMATo.jl"
+    "text": "In Julia, type\n\n] add https://github.com/JuliaTDA/GeometricDatasets.jl\n] add https://github.com/JuliaTDA/ToMATo.jl"
   },
   {
     "objectID": "index.html#installation",
     "href": "index.html#installation",
     "title": "Getting started",
     "section": "",
-    "text": "In Julia, type\n\n] add https://github.com/JuliaTDA/ToMATo.jl"
+    "text": "In Julia, type\n\n] add https://github.com/JuliaTDA/GeometricDatasets.jl\n] add https://github.com/JuliaTDA/ToMATo.jl"
   },
   {
     "objectID": "index.html#first-usage",
     "href": "index.html#first-usage",
     "title": "Getting started",
     "section": "First usage",
-    "text": "First usage\nLoad some libraries\n\nusing ToMATo\nimport GeometricDatasets as gd\nusing DataFrames\nusing AlgebraOfGraphics\n\n[ Info: Precompiling ToMATo [9853e363-5d33-44e1-8657-922a46906663]\n\n\nthen define X as the following pointcloud with ds as density function:\n\nX = hcat(randn(2, 800), randn(2, 800) .+ 4)\nk = x -&gt; exp(-(x / 2)^2)\nds = gd.Filters.density(X, kernel_function = X -&gt; X .|&gt; k |&gt; sum)\n\ndf = DataFrame(X', :auto)\ndf.ds = ds\nplt = data(df) * mapping(:x1, :x2, color = :ds)\ndraw(plt)\n\n\n\n\nThen calculate its proximity graph\n\ng = proximity_graph(X, 0.2)\n\nfig, ax, plt = graph_plot(X, g, ds)\nfig\n\n\n\n\nAfter that, we need to apply the ToMATo algorithm twice: the first time to estimate the parameter by analyzing the births and deaths of the connected components:\n\nclusters, births_and_deaths = tomato(X, g, ds, Inf)\n\nplot_births_and_deaths(births_and_deaths)\n\n\n\n\nWe can see that 0.1 is a reasonable cut for the peaks. Let’s calculate ToMATo again\n\nclusters, births_and_deaths = tomato(X, g, ds, 0.1)\n\n([182, 182, 3, 182, 182, 182, 182, 182, 182, 182  …  1243, 1243, 1243, 1243, 1243, 1243, 1243, 1243, 1243, 1243], Dict{Int64, Vector{&lt;:Real}}(913 =&gt; [0.2962016761302948, 0.2863806188106537], 1144 =&gt; [0.14472860097885132, 0.12808755040168762], 858 =&gt; [0.20340050756931305, 0.17619378864765167], 1010 =&gt; [0.26480939984321594, 0.2599443793296814], 1222 =&gt; [0.19645491242408752, 0.19166573882102966], 234 =&gt; [0.15226280689239502, Inf], 67 =&gt; [0.2282641977071762, 0.2152177095413208], 1344 =&gt; [0.16225239634513855, 0.14735743403434753], 182 =&gt; [0.3381901681423187, Inf], 657 =&gt; [0.3377617597579956, 0.3377504050731659]…))\n\n\nand plot the final clusters:\n\ndf = DataFrame(X', :auto)\ndf.cluster = clusters .|&gt; string\nplt = data(df) * mapping(:x1, :x2, color = :cluster)\ndraw(plt)"
+    "text": "First usage\nLoad some libraries\n\nusing ToMATo\nimport GeometricDatasets as gd\nusing AlgebraOfGraphics\n\nthen define X as the following pointcloud with ds as density function:\n\nX = hcat(randn(2, 800), randn(2, 800) .+ 4)\nk = x -&gt; exp(-(x / 2)^2)\nds = gd.Filters.density(X, kernel_function = X -&gt; X .|&gt; k |&gt; sum)\n\ndf = (x1 = X[1, :], x2 = X[2, :], ds = ds)\nplt = data(df) * mapping(:x1, :x2, color = :ds)\ndraw(plt)\n\n\n\n\nThen calculate its proximity graph\n\ng = proximity_graph(X, 0.2, max_k_ball = 6, k_nn = 4, min_k_ball = 2)\n\nfig, ax, plt = graph_plot(X, g, ds)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Makie.Axis, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19\n\n\n\n\n\nAfter that, we need to apply the ToMATo algorithm twice: the first time to estimate the parameter by analyzing the births and deaths of the connected components:\n\nclusters, births_and_deaths = tomato(X, g, ds, Inf)\n\nplot_births_and_deaths(births_and_deaths)\n\n\n\n\nWe can see that 0.1 is a reasonable cut for the peaks. Let’s calculate ToMATo again and plot it\n\nτ = 0.1\nclusters, births_and_deaths = tomato(X, g, ds, τ, max_cluster_height = τ)\n\nfig, ax, plt = graph_plot(X, g, clusters .|&gt; string)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Makie.Axis, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19\n\n\n\n\n\nSee the Examples section for more."
+  },
+  {
+    "objectID": "examples.html",
+    "href": "examples.html",
+    "title": "Examples",
+    "section": "",
+    "text": "Let’s play with some datasets and choices of the parameter \\(\\tau\\) and the proximity graph \\(g\\).\nLoad some packages\nusing ToMATo\nimport GeometricDatasets as gd\nusing AlgebraOfGraphics\nusing Makie"
+  },
+  {
+    "objectID": "examples.html#two-normals-in-the-plane",
+    "href": "examples.html#two-normals-in-the-plane",
+    "title": "Examples",
+    "section": "Two normals in the plane",
+    "text": "Two normals in the plane\nDefine \\(X\\) as the union of two normal distributions\n\nX = hcat(randn(2, 800), randn(2, 800) .+ 4)\nk = x -&gt; exp(-(x / 2)^2)\nds = gd.Filters.density(X, kernel_function = X -&gt; X .|&gt; k |&gt; sum)\n\ndf = (x1 = X[1, :], x2 = X[2, :], ds = ds)\nplt = data(df) * mapping(:x1, :x2, color = :ds)\ndraw(plt)\n\n\n\n\nCreate its proximity graph\n\ng = proximity_graph(X, 0.2, max_k_ball = 6, k_nn = 4, min_k_ball = 2)\n\nfig, ax, plt = graph_plot(X, g, ds)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19\n\n\n\n\n\nand plot its 0-dimensional persistence diagram\n\n_clusters_, births_and_deaths = tomato(X, g, ds, Inf)\nplot_births_and_deaths(births_and_deaths)\n\n\n\n\nSetting \\(\\tau\\) to 0.1 seems a good choice.\n\nτ = 0.1\nclusters, births_and_deaths = tomato(X, g, ds, τ, max_cluster_height = τ)\n\nfig, ax, plt = graph_plot(X, g, clusters .|&gt; string)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19"
+  },
+  {
+    "objectID": "examples.html#three-normals-in-the-plane",
+    "href": "examples.html#three-normals-in-the-plane",
+    "title": "Examples",
+    "section": "Three normals in the plane",
+    "text": "Three normals in the plane\n\nX = hcat(randn(2, 500), randn(2, 500) .+ 4, randn(2, 600) .*0.8 .+ (-3, 3))\nk = x -&gt; exp(-(x)^2)\nds = gd.Filters.density(X, kernel_function = X -&gt; X .|&gt; k |&gt; sum)\n\ndf = (x1 = X[1, :], x2 = X[2, :], ds = ds)\nplt = data(df) * mapping(:x1, :x2, color = :ds)\ndraw(plt)\n\n\n\n\n\ng = proximity_graph(X, 0.2, max_k_ball = 10, k_nn = 5, min_k_ball = 5)\n\nfig, ax, plt = graph_plot(X, g, ds)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19\n\n\n\n\n\n\n_, births_and_deaths = tomato(X, g, ds, Inf)\nplot_births_and_deaths(births_and_deaths)\n\n\n\n\n\nτ = 0.05\nclusters, _ = tomato(X, g, ds, τ, max_cluster_height = τ)\n\nfig, ax, plt = graph_plot(X, g, clusters .|&gt; string)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19"
+  },
+  {
+    "objectID": "examples.html#two-normals-in-mathbbr3",
+    "href": "examples.html#two-normals-in-mathbbr3",
+    "title": "Examples",
+    "section": "Two normals in \\(\\mathbb{R}^3\\)",
+    "text": "Two normals in \\(\\mathbb{R}^3\\)\n\nX = hcat(randn(3, 800), randn(3, 800) .+ 4)\nk = x -&gt; exp(-(x / 2)^2)\nds = gd.Filters.density(X, kernel_function = X -&gt; X .|&gt; k |&gt; sum)\n\ng = proximity_graph(X, 0.2, max_k_ball = 10, k_nn = 5, min_k_ball = 4)\nfig, ax, plt = graph_plot(X, g, ds)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis3, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19\n\n\n\n\n\n\n_, births_and_deaths = tomato(X, g, ds, Inf)\nplot_births_and_deaths(births_and_deaths)\n\n\n\n\n\nτ = 0.1\nclusters, _ = tomato(X, g, ds, τ, max_cluster_height = τ)\n\nfig, ax, plt = graph_plot(X, g, clusters .|&gt; string)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis3, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19"
+  },
+  {
+    "objectID": "examples.html#three-normals-in-mathbbr3",
+    "href": "examples.html#three-normals-in-mathbbr3",
+    "title": "Examples",
+    "section": "Three normals in \\(\\mathbb{R}^3\\)",
+    "text": "Three normals in \\(\\mathbb{R}^3\\)\n\nX = hcat(randn(3, 800), randn(3, 800) .+ 4, randn(3, 1000) .+ (3, -3, 3))\nk = x -&gt; exp(-(x / 2)^2)\nds = gd.Filters.density(X, kernel_function = X -&gt; X .|&gt; k |&gt; sum)\n\naxis = (type = Axis3, width = 600, height = 600)\ndf = (x1 = X[1, :], x2 = X[2, :], x3 = X[3, :], ds = ds)\nplt = data(df) * mapping(:x1, :x2, :x3, color = :ds)\ndraw(plt, axis = axis)\n\n\n\n\n\ng = proximity_graph(X, 0.2, max_k_ball = 10, k_nn = 5, min_k_ball = 5)\n\nfig, ax, plt = graph_plot(X, g, ds)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis3, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19\n\n\n\n\n\n\n_, births_and_deaths = tomato(X, g, ds, Inf)\nplot_births_and_deaths(births_and_deaths)\n\n\n\n\n\nτ = 0.05\nclusters, _ = tomato(X, g, ds, τ, max_cluster_height = τ)\n\nfig, ax, plt = graph_plot(X, g, clusters .|&gt; string)\nfig\n\n┌ Warning: Axis got passed, but also axis attributes. Ignoring axis attributes (type = Axis3, width = 600, height = 600).\n└ @ AlgebraOfGraphics ~/.julia/packages/AlgebraOfGraphics/yhdjr/src/draw.jl:19"
+  },
+  {
+    "objectID": "theory.html",
+    "href": "theory.html",
+    "title": "Theory",
+    "section": "",
+    "text": "Theory\n[work in progress. see the original papers for now]\nhttps://geometrica.saclay.inria.fr/data/Steve.Oudot/clustering/"
   }
 ]
