@@ -8,8 +8,6 @@ using AlgebraOfGraphics
 using GLMakie
 using Graphs
 using ProgressMeter
-using Quartomenter;
-export @qdoc;
 export PointCloud;
 
 include("graph.jl");
