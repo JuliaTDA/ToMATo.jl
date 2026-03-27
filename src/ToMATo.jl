@@ -1,22 +1,24 @@
 module ToMATo
 
-using GeometricDatasets
+using MetricSpaces
 using Distances
 using NearestNeighbors
 using Base.Threads
-using AlgebraOfGraphics
-using GLMakie
 using Graphs
 using ProgressMeter
-export PointCloud;
 
-include("graph.jl");
-export proximity_graph;
+include("density.jl")
+export knn_density
 
-include("tomato algorithm.jl");
-export tomato, plot_births_and_deaths;
+include("graph.jl")
+export proximity_graph
 
-include("plots.jl");
-export graph_plot;
+include("tomato algorithm.jl")
+export tomato
+
+# Stubs for extension functions (loaded by ToMAToMakieExt)
+function graph_plot end
+function plot_births_and_deaths end
+export graph_plot, plot_births_and_deaths
 
 end # module ToMATo
