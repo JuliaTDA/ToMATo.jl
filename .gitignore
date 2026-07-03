@@ -2,4 +2,6 @@
 *.pdf
 *.json
 .vscode/settings.json
-docs/
+# Documenter build output and per-developer docs manifest (keep docs sources).
+docs/build/
+docs/Manifest.toml

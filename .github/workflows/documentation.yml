@@ -1,0 +1,43 @@
+name: Documentation
+on:
+  push:
+    branches:
+      - main
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+jobs:
+  build:
+    name: Build & deploy docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: write
+      contents: write       # to push to gh-pages
+      pull-requests: read
+      statuses: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+      # MetricSpaces (unregistered) must be developed into the docs environment
+      # together with the package itself before the site is built.
+      - name: Develop unregistered ecosystem packages
+        run: |
+          julia --project=docs -e '
+            using Pkg
+            Pkg.develop([
+              PackageSpec(url = "https://github.com/JuliaTDA/MetricSpaces.jl"),
+              PackageSpec(path = pwd()),
+            ])
+            Pkg.instantiate()'
+      - name: Build and deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          # for gh-pages deploy
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}       # optional SSH deploy key
+        run: julia --project=docs docs/make.jl
