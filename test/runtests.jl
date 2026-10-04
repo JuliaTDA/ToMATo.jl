@@ -1,7 +1,10 @@
 using Test
 using ToMATo
+using Aqua
 using MetricSpaces.Datasets
 using Graphs: nv, ne
+
+Aqua.test_all(ToMATo)
 
 @testset "ToMATo.jl" begin
     @testset "knn_density" begin

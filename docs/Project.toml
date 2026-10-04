@@ -1,5 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+MetricSpaces = "737298cd-3e4b-40c4-a4ce-863151543a8d"
 ToMATo = "9853e363-5d33-44e1-8657-922a46906663"
 
 [compat]

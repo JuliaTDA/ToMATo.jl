@@ -22,8 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1'        # latest stable 1.x; the MetricSpaces dependency pins
-                       # `Downloads = "1.7.0"`, unsatisfiable on 1.10.
+          - '1.9'      # minimum supported
+          - '1'        # latest stable 1.x
         os:
           - ubuntu-latest
         arch:

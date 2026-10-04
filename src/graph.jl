@@ -3,10 +3,14 @@
 
 Calculate the proximity graph of a metric space `X` and return a graph.
 
-For each point x in X, creates an ϵ-ball and stores all neighbor ids.
-If the number of neighbors is less than `min_k_ball`, searches for the
-`k_nn` nearest neighbors instead. At most `max_k_ball` edges per point
-are kept.
+For each point, queries a Euclidean ϵ-ball including self. If the list has fewer
+than `min_k_ball + 1` entries, queries `k_nn + 1` nearest samples instead. This
+fallback can introduce edges longer than ϵ; it requires `k_nn < length(X)`.
+
+The sorted neighbour list is truncated to `max_k_ball` entries before removing
+self. The graph is undirected and unions all retained edges, so final vertex
+degree can exceed this cap. Set `min_k_ball=0` and `max_k_ball=length(X)` for a
+radius graph without fallback or truncation. Returns a `Graphs.SimpleGraph`.
 """
 function proximity_graph(X::EuclideanSpace, ϵ; max_k_ball=5, min_k_ball=1, k_nn=3)
     n = length(X)

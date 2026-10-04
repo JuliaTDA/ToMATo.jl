@@ -1,90 +1,53 @@
 # ToMATo.jl
 
-*Topological mode-seeking clustering for the [JuliaTDA](https://github.com/JuliaTDA) ecosystem.*
+Imagine two hills connected by a saddle. As a water level moves down from the summits, each hill first appears as its own island. When the water reaches the saddle, the islands meet. ToMATo uses this picture to cluster data: hills are density peaks, a proximity graph supplies connections, and the height of a peak above its merge saddle measures its prominence.
 
-```@meta
-CurrentModule = ToMATo
-```
+`ToMATo.jl` implements this density-based workflow for [JuliaTDA](https://github.com/JuliaTDA). It exposes three functions, and you can replace either the density estimate or the graph with your own inputs.
 
-`ToMATo.jl` is a Julia implementation of the **ToMATo** algorithm
-(*Topological Mode Analysis Tool*; Chazal, Guibas, Oudot & Skraba, 2013). It
-clusters a point cloud by seeking the peaks (modes) of a density estimate and
-then **merging** peaks that are not prominent enough to survive as separate
-clusters.
+| Step | Function | Output |
+| :--- | :--- | :--- |
+| Estimate local density | [`knn_density`](@ref) | One numeric value per point |
+| Decide which points can meet | [`proximity_graph`](@ref) | An undirected graph on point IDs |
+| Merge modes below a prominence threshold | [`tomato`](@ref) | Point labels and a peak birth/death dictionary |
 
-Prominence is measured with **persistence**: as a threshold sweeps down through
-the density, each mode is *born* at its peak and *dies* when it merges into a
-taller neighbour. A single parameter `τ` decides which merges happen — modes
-whose persistence (peak height minus merge height) is below `τ` are absorbed
-into a more prominent cluster.
-
-The practical payoff is that [`tomato`](@ref) returns a **persistence diagram of
-the modes**, so you don't have to guess the number of clusters up front: read
-the natural number of clusters off the gap in that diagram, then pick `τ` inside
-the gap.
+Start with the [worked tutorial](tutorial.md), then read [parameters and interpretation](parameters.md). The [API reference](api.md) retains source docstrings; the guides clarify implementation details that matter when interpreting results.
 
 ## Installation
 
-`ToMATo.jl` builds on
-[MetricSpaces.jl](https://github.com/JuliaTDA/MetricSpaces.jl), which is not yet
-registered in the General registry. Until it is, `develop` the dependency from
-its URL:
+Use Julia 1.9 or later. The ecosystem packages are currently unregistered, so develop both in one resolution:
 
 ```julia
 using Pkg
-Pkg.develop(url = "https://github.com/JuliaTDA/MetricSpaces.jl")
-Pkg.develop(url = "https://github.com/JuliaTDA/ToMATo.jl")
+Pkg.activate("tomato-example"; shared=false)
+Pkg.develop([
+    PackageSpec(url="https://github.com/JuliaTDA/MetricSpaces.jl"),
+    PackageSpec(url="https://github.com/JuliaTDA/ToMATo.jl"),
+])
 ```
 
-## The pipeline
+For local sibling checkouts, use `PackageSpec(path="../MetricSpaces.jl")` and `PackageSpec(path="../ToMATo.jl")` instead; paths are relative to the Julia working directory. Dataset generators require an explicit import such as `using MetricSpaces.Datasets: two_clusters`.
 
-The workflow has three steps, one function each:
+## What the threshold means
 
-1. [`knn_density`](@ref) — estimate a density at every point.
-2. [`proximity_graph`](@ref) — build a neighbourhood graph over the points.
-3. [`tomato`](@ref) — run the topological merging and return the clusters plus
-   the mode births/deaths.
+For an eligible merge at density `d`, the shorter peak with density `b` merges when `b - d < τ`. **Increasing `τ` permits more merging.** The default `τ=Inf` merges every eligible finite-density mode; it does not keep every peak as a separate cluster. With distinct densities, disconnected graph components cannot merge with each other even at this default.
 
-```julia
-using ToMATo
-using MetricSpaces
-using MetricSpaces.Datasets: two_clusters
+The dictionary returned from an `Inf` run records the births of detected peaks and the saddle heights of eligible merges. This makes it useful for exploring a finite threshold. A visible gap in finite prominences can suggest a choice; examine it alongside geometry and connectivity rather than treating it as a guarantee of a unique correct cluster count.
 
-# A point cloud with two well-separated blobs
-X = two_clusters(200; dim = 2, separation = 10)
+The current implementation has limitations on equal-density plateaus and some multiway saddles. A connected graph can retain several modes even with `τ=Inf`; see the reproducible example in [parameters and interpretation](parameters.md#Multiway-saddles-in-the-current-implementation). Its recorded diagram should be read with these limits in mind.
 
-# 1. Density estimate (higher = denser region)
-ds = knn_density(X; k = 5)
+## Build these docs
 
-# 2. Neighbourhood graph over the points
-g = proximity_graph(X, 1.5; max_k_ball = 10, min_k_ball = 2, k_nn = 5)
+Clone `MetricSpaces.jl` beside this repository, then run from the ToMATo repository root:
 
-# 3. ToMATo: merge modes whose persistence is below τ = 0.1
-clusters, births_and_deaths = tomato(X, g, ds, 0.1)
-
-clusters               # a cluster label for each point of X
-births_and_deaths      # birth/death height of each mode — read τ off the gap
+```bash
+julia --project=docs docs/setup.jl
+julia --project=docs docs/make.jl
 ```
 
-## Choosing `τ`
-
-Run [`tomato`](@ref) once with `τ = Inf` (the default) to keep every mode and
-inspect `births_and_deaths`; the difference `birth - death` is each mode's
-persistence. Pick a `τ` larger than the noise-level persistences but smaller than
-the gap to the real clusters, then re-run. Set `max_cluster_height` to fuse any
-cluster whose peak density is below a floor into a single background cluster
-labelled `0`.
+Setup resolves local sources and instantiates the dedicated docs environment. The build executes tutorial `@example` blocks and writes `docs/build/index.html`. Deployment is disabled unless `JULIATDA_DOCS_DEPLOY=true` is set explicitly.
 
 ## Reference
 
-- F. Chazal, L. J. Guibas, S. Y. Oudot & P. Skraba (2013). **Persistence-based
-  clustering in Riemannian manifolds.** *Journal of the ACM*, 60(6), 41.
-  <https://doi.org/10.1145/2535927>
+F. Chazal, L. J. Guibas, S. Y. Oudot & P. Skraba (2013), *Persistence-based clustering in Riemannian manifolds*, Journal of the ACM 60(6), 41. [DOI](https://doi.org/10.1145/2535927).
 
-## See also
-
-* [MetricSpaces.jl](https://github.com/JuliaTDA/MetricSpaces.jl) — the geometry
-  foundation this package builds on.
-* [TDAplots.jl](https://github.com/JuliaTDA/TDAplots.jl) — plots a ToMATo result
-  and its mode-persistence diagram.
-* [JuliaTDA.jl](https://github.com/JuliaTDA/JuliaTDA.jl) — the umbrella package.
+See [MetricSpaces.jl](https://github.com/JuliaTDA/MetricSpaces.jl) for geometry, [TDAplots.jl](https://github.com/JuliaTDA/TDAplots.jl) for figures, and [JuliaTDA.jl](https://github.com/JuliaTDA/JuliaTDA.jl) for the umbrella package.

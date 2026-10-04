@@ -3,16 +3,29 @@
            max_cluster_height::Real=0)
 
 Calculate the ToMATo clustering of the metric space `X`, with proximity-graph `g`,
-relative to the density values `ds` and the parameter `τ`.
+relative to aligned finite density values `ds` and a nonnegative threshold `τ`.
+An eligible merge occurs when the shorter peak's height above the current
+density is strictly less than `τ`. Increasing `τ` allows more merges; the
+default `τ=Inf` applies no finite prominence cutoff, while `τ=0` retains modes
+for distinct densities.
 
 Returns two objects:
 
 - `clusters`: a vector of integers, one for each point of `X`,
   with the corresponding cluster number.
 
-- `births_and_deaths`: a dictionary with the birth and death of
-  each peak that arose in the ToMATo algorithm. This is used
-  to decide the best value of τ.
+- `births_and_deaths`: a dictionary mapping original peak point IDs to
+  `[birth_density, death_density]`. A finite death is recorded only for an
+  accepted merge in this run. `death_density=Inf` is the sentinel for an
+  unmerged peak; do not interpret `birth_density - Inf` as a finite lifetime.
+  Use the unrestricted `τ=Inf` run to inspect recorded finite prominences.
+
+Final positive labels rank surviving peaks by descending density; they differ
+from dictionary keys and can change between runs. Equal-density neighbours do
+not automatically join. The current implementation also has a multiway-saddle
+limitation: if a chosen component is absorbed by a higher peak, later comparisons
+at the same point can retain a stale component ID. Thus even a connected graph
+with distinct densities can retain multiple modes at `τ=Inf`.
 
 `max_cluster_height`: every cluster whose peak is less than
 `max_cluster_height` will be fused together in a single cluster

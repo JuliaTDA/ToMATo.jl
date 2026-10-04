@@ -18,11 +18,15 @@ makedocs(;
     ),
     pages = [
         "Home" => "index.md",
+        "Worked tutorial" => "tutorial.md",
+        "Parameters and interpretation" => "parameters.md",
         "API reference" => "api.md",
     ],
 )
 
-deploydocs(;
-    repo = "github.com/JuliaTDA/ToMATo.jl",
-    devbranch = "main",
-)
+if get(ENV, "JULIATDA_DOCS_DEPLOY", "false") == "true"
+    deploydocs(;
+        repo = "github.com/JuliaTDA/ToMATo.jl",
+        devbranch = "main",
+    )
+end
