@@ -38,6 +38,7 @@ jobs:
             Pkg.instantiate()'
       - name: Build and deploy
         env:
+          JULIATDA_DOCS_DEPLOY: 'true'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          # for gh-pages deploy
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}       # optional SSH deploy key
         run: julia --project=docs docs/make.jl
