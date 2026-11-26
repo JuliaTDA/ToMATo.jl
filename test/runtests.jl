@@ -2,7 +2,8 @@ using Test
 using ToMATo
 using Aqua
 using MetricSpaces.Datasets
-using Graphs: nv, ne
+using Graphs: nv, ne, SimpleGraph, add_edge!
+using MetricSpaces: EuclideanSpace
 
 Aqua.test_all(ToMATo)
 
@@ -71,4 +72,23 @@ Aqua.test_all(ToMATo)
         # And the extremes should differ on this dataset
         @test n0 > nInf
     end
+end
+
+@testset "Multiway saddles and tied peaks" begin
+    X = EuclideanSpace([[Float64(i)] for i in 1:7])
+    g = SimpleGraph(7)
+    for (u, v) in [(1, 4), (2, 5), (3, 6), (4, 7), (5, 7), (6, 7)]
+        add_edge!(g, u, v)
+    end
+    ds = [5.0, 7.0, 8.0, 3.0, 2.0, 1.5, 1.0]
+    @test tomato(X, g, ds) ==
+        (fill(1, 7), Dict(1 => [5.0, 1.0], 2 => [7.0, 1.0], 3 => [8.0, Inf]))
+    @test tomato(X, g, ds, 6) ==
+        ([2, 2, 1, 2, 2, 1, 2], Dict(1 => [5.0, 1.0], 2 => [7.0, Inf], 3 => [8.0, Inf]))
+    @test tomato(X, g, ds, 6; max_cluster_height=7.5)[1] == [0, 0, 1, 0, 0, 1, 0]
+    @test tomato(X, g, ones(7))[1] == collect(1:7)
+
+    ds[3] = 7.0
+    @test tomato(X, g, ds, 7) ==
+        (fill(1, 7), Dict(1 => [5.0, 1.0], 2 => [7.0, 1.0], 3 => [7.0, Inf]))
 end

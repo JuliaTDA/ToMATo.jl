@@ -4,6 +4,8 @@ Notable changes to ToMATo are recorded here.
 
 ## Unreleased
 
+- Use union-find for cluster merges and keep the live peak at multiway saddles.
+
 - Prepare the package for its first General registry release.
 - Add complete dependency compatibility bounds, an MIT license, and Aqua
   quality checks.

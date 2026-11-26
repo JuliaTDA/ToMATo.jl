@@ -71,11 +71,13 @@ Investigate ties explicitly. For plateau-aware merging, preprocess with a docume
 
 An isolated point becomes a mode with death `Inf`. Handle empty datasets before calling the pipeline: downstream operations expect nonempty data. The routines are intended for finite scores; `NaN` and infinities can disrupt ordering and comparisons.
 
-## Multiway saddles in the current implementation
+## Multiway saddles
 
-There is a second limit even without ties. At a point meeting three or more current modes, the algorithm chooses an initial component `c_max` from the densest upper neighbour. If the first merge absorbs that component into a higher peak, `c_max` is not updated for subsequent comparisons at the same point. A later replacement can then target a label that has already disappeared, leaving modes unmerged.
+Each accepted merge updates the current peak before considering the next upper
+component. At equal peak heights, the incoming component survives. With distinct
+finite densities, the unrestricted run produces one cluster per connected component.
 
-This seven-vertex connected graph reproduces the behavior with distinct densities:
+This seven-vertex graph has three peaks that meet at one saddle.
 
 ```@example multiway
 using ToMATo, MetricSpaces, Graphs
@@ -88,17 +90,16 @@ end
 ds = [5.0, 7.0, 8.0, 3.0, 2.0, 1.5, 1.0]
 labels, modes = tomato(X, g, ds, Inf)
 @assert length(connected_components(g)) == 1
-@assert length(unique(labels)) == 2
+@assert labels == fill(1, 7)
+@assert modes == Dict(1 => [5.0, 1.0], 2 => [7.0, 1.0], 3 => [8.0, Inf])
 labels
 ```
-
-The two unmerged peaks receive `death=Inf`. This is a current implementation limitation, not evidence of two graph components or a finite prominence gap. For analyses relying on a complete merge hierarchy, verify multiway events against an independent implementation. The earlier path example avoids this case and demonstrates the intended pairwise threshold rule.
 
 ## Troubleshooting and cost
 
 | Symptom | Inspect first |
 | :--- | :--- |
-| Many clusters even at `Inf` | Disconnected components, density ties, truncation cap, multiway saddle limitation |
+| Many clusters even at `Inf` | Disconnected components, density ties, truncation cap |
 | Everything becomes one cluster | Graph bridges, fallback edges, threshold too large |
 | Very large density scores | `k=1`, duplicates, feature scaling |
 | Neighbour-query bounds error | Graph fallback `k_nn + 1` relative to dataset size |

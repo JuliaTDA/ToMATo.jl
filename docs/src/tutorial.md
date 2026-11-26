@@ -66,7 +66,7 @@ separate, _ = tomato(X, disconnected, ds, Inf)
 separate
 ```
 
-No threshold can create a missing connection. On this path graph, the `Inf` run leaves one mode per connected component. Conversely, a long nearest-neighbour fallback edge can connect groups that a radius-only graph would separate. Inspect the graph as part of the clustering decision. The current implementation's [multiway saddle limitation](parameters.md#Multiway-saddles-in-the-current-implementation) means this one-mode-per-component result is not a universal guarantee.
+No threshold can create a missing connection. On this path graph, the `Inf` run leaves one mode per connected component. Conversely, a long nearest-neighbour fallback edge can connect groups that a radius-only graph would separate. Inspect the graph as part of the clustering decision. Equal-density neighbours can leave extra modes.
 
 ## Use all three functions on data
 

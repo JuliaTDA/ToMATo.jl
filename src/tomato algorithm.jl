@@ -20,12 +20,11 @@ Returns two objects:
   unmerged peak; do not interpret `birth_density - Inf` as a finite lifetime.
   Use the unrestricted `τ=Inf` run to inspect recorded finite prominences.
 
-Final positive labels rank surviving peaks by descending density; they differ
-from dictionary keys and can change between runs. Equal-density neighbours do
-not automatically join. The current implementation also has a multiway-saddle
-limitation: if a chosen component is absorbed by a higher peak, later comparisons
-at the same point can retain a stale component ID. Thus even a connected graph
-with distinct densities can retain multiple modes at `τ=Inf`.
+Final positive labels rank surviving peaks by descending density. Equal-density
+neighbours do not automatically join. At a saddle, the component of the densest
+upper neighbour is compared with the other upper components in vertex order.
+Each accepted merge keeps the higher peak. On a peak-density tie, the peak from
+the other component survives. Later comparisons use the surviving peak.
 
 `max_cluster_height`: every cluster whose peak is less than
 `max_cluster_height` will be fused together in a single cluster
@@ -36,60 +35,56 @@ function tomato(
     max_cluster_height::Real=0
     )
     n = length(X)
-    sorted_ids = sortperm(ds, rev=true)
-    clusters = zeros(Int64, n)
-    births_and_deaths = Dict{Int64, Vector{<:Real}}()
+    parent = collect(1:n)
+    sizes = ones(Int, n)
+    peaks = collect(1:n)
+    births_and_deaths = Dict{Int, Vector{<:Real}}()
 
-    for i in sorted_ids
-        N = neighbors(g, i) |> copy
-        filter!(x -> ds[x] > ds[i], N)
-
-        # if there is no upper-neighbor
-        if length(N) == 0
-            clusters[i] = i
+    for i in sortperm(ds; rev=true)
+        adjacent = neighbors(g, i)
+        higher = filter(j -> ds[j] > ds[i], adjacent)
+        if isempty(higher)
             births_and_deaths[i] = [ds[i], Inf]
             continue
         end
 
-        c_max = clusters[argmax(x -> ds[x], N)]
-        clusters[i] = c_max
+        anchor = argmax(j -> ds[j], higher)
+        component = _tomato_root!(parent, anchor)
+        parent[i] = component
+        sizes[component] += 1
+        for j in higher
+            other = _tomato_root!(parent, j)
+            component == other && continue
+            a, b = peaks[component], peaks[other]
+            min(ds[a], ds[b]) < ds[i] + τ || continue
 
-        for j in N
-            c_j = clusters[j]
+            survivor, absorbed = ds[a] > ds[b] ? (a, b) : (b, a)
+            births_and_deaths[absorbed][2] = ds[i]
 
-            # if the clusters are equal, skip
-            c_max == c_j && continue
-
-            # if c_j has no cluster, put j on c_max
-            if c_j == 0
-                clusters[j] = c_max
-                continue
+            # Union by size without changing which peak labels the union.
+            if sizes[component] < sizes[other]
+                component, other = other, component
             end
-
-            # If the lowest of them is just a bit below the current height ds[i],
-            # we fuse the clusters
-            if min(ds[c_max], ds[c_j]) < ds[i] + τ
-                from, to = sort([c_max, c_j], by=x -> ds[x])
-                births_and_deaths[from][2] = ds[i]
-                replace!(clusters, from => to)
-            end
+            parent[other] = component
+            sizes[component] += sizes[other]
+            peaks[component] = survivor
         end
     end
 
-    sorted_clusters = sort(clusters |> unique, by=x -> ds[x], rev=true)
+    point_peaks = [peaks[_tomato_root!(parent, i)] for i in 1:n]
+    surviving_peaks = sort!(unique(point_peaks); by=i -> ds[i], rev=true)
+    labels = zeros(Int, n)
+    for (label, peak) in enumerate(surviving_peaks)
+        ds[peak] < max_cluster_height || (labels[peak] = label)
+    end
 
-    cluster_dict =
-        map(sorted_clusters) do cl
-            if ds[cl] < max_cluster_height
-                true_number = 0
-            else
-                true_number = findfirst(x -> x == cl, sorted_clusters)
-            end
-            Dict(cl => true_number)
-        end
+    return labels[point_peaks], births_and_deaths
+end
 
-    cluster_dict = merge(cluster_dict...)
-    final_clusters = replace(clusters, cluster_dict...)
-
-    return final_clusters, births_and_deaths
+function _tomato_root!(parent, i)
+    while i != parent[i]
+        parent[i] = parent[parent[i]]
+        i = parent[i]
+    end
+    return i
 end

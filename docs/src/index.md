@@ -33,7 +33,7 @@ For an eligible merge at density `d`, the shorter peak with density `b` merges w
 
 The dictionary returned from an `Inf` run records the births of detected peaks and the saddle heights of eligible merges. This makes it useful for exploring a finite threshold. A visible gap in finite prominences can suggest a choice; examine it alongside geometry and connectivity rather than treating it as a guarantee of a unique correct cluster count.
 
-The current implementation has limitations on equal-density plateaus and some multiway saddles. A connected graph can retain several modes even with `τ=Inf`; see the reproducible example in [parameters and interpretation](parameters.md#Multiway-saddles-in-the-current-implementation). Its recorded diagram should be read with these limits in mind.
+Equal-density plateaus can retain several modes even with `τ=Inf`. See [parameters and interpretation](parameters.md#Plateaus-and-other-edge-cases) for the tie rules.
 
 ## Build these docs
 

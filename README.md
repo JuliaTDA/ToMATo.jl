@@ -65,7 +65,7 @@ labels, _ = tomato(X, g, ds, 0.1)  # illustrative: inspect prominences first
 
 The [documentation](https://JuliaTDA.github.io/ToMATo.jl/dev/) explains density and graph parameters, disconnected graphs and plateaus, threshold selection, background label `0`, and plots with TDAplots. Tutorial examples execute during the documentation build.
 
-The current implementation also has a limitation at some multiway saddles: even a connected graph with distinct densities can retain more than one mode at `τ=Inf`. The parameters guide gives a reproducible counterexample. Check memberships rather than assuming the unrestricted run equals graph connected components.
+With distinct finite densities, the unrestricted run produces one cluster per connected component. Equal-density neighbours can leave multiple modes.
 
 ## Documentation and development
 
